@@ -1,71 +1,112 @@
+/* Importando uma fonte mais moderna */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap');
+
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
 body {
-    font-family: Arial, sans-serif;
-    background-color: #0d1117;
-    color: white;
-    padding: 20px;
+    font-family: 'Inter', sans-serif;
+    background-color: #0f172a; /* Azul marinho muito escuro */
+    color: #f8fafc;
+    padding: 30px;
 }
 
 header {
     text-align: center;
-    margin-bottom: 30px;
+    margin-bottom: 40px;
 }
 
-h1 { color: #ffc107; }
+header h1 {
+    font-size: 2.5rem;
+    font-weight: 800;
+    color: #fbbf24; /* Amarelo ouro */
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    text-shadow: 2px 2px 10px rgba(251, 191, 36, 0.3);
+}
 
-.container {
+/* Container de Pedidos em Grid (Lado a Lado) */
+#lista-pedidos {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 20px;
+}
+
+/* Estilo do Card do Pedido */
+.card-pedido {
+    background: #1e293b; /* Fundo do card */
+    border-radius: 16px;
+    padding: 20px;
+    border: 1px solid #334155;
+    transition: transform 0.2s, box-shadow 0.2s;
     display: flex;
     flex-direction: column;
-    gap: 15px;
-    max-width: 600px;
-    margin: 0 auto;
+    justify-content: space-between;
+    animation: slideIn 0.3s ease-out;
 }
 
-.card-pedido {
-    background: #161b22;
-    border: 2px solid #30363d;
-    border-radius: 12px;
-    padding: 20px;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+.card-pedido:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+    border-color: #fbbf24;
 }
 
+/* Cabeçalho do Card */
 .header-pedido {
-    font-size: 1.2rem;
-    border-bottom: 1px solid #30363d;
-    padding-bottom: 10px;
-    margin-bottom: 10px;
-    color: #58a6ff;
-}
-
-.itens-pedido p {
-    font-size: 1.1rem;
-    line-height: 1.4;
+    border-bottom: 2px solid #334155;
+    padding-bottom: 15px;
     margin-bottom: 15px;
 }
 
+.header-pedido strong {
+    font-size: 1.3rem;
+    color: #fbbf24;
+    display: block;
+}
+
+/* Lista de Itens */
+.itens-pedido {
+    font-size: 1.1rem;
+    color: #cbd5e1;
+    line-height: 1.6;
+    margin-bottom: 20px;
+    background: #0f172a;
+    padding: 10px;
+    border-radius: 8px;
+}
+
+/* Rodapé do Card */
 .footer-pedido {
     display: flex;
-    justify-content: space-between;
-    align-items: center;
+    flex-direction: column;
+    gap: 15px;
 }
 
-.footer-pedido span {
-    font-weight: bold;
-    color: #3fb950;
+.total-txt {
+    font-weight: 800;
+    color: #4ade80; /* Verde vibrante */
+    font-size: 1.2rem;
+    text-align: center;
 }
 
+/* Botão de Concluir */
 .btn-concluir {
-    background-color: #238636;
+    background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
     color: white;
     border: none;
-    padding: 10px 15px;
-    border-radius: 6px;
-    font-weight: bold;
+    padding: 12px;
+    border-radius: 10px;
+    font-weight: 700;
+    font-size: 1rem;
     cursor: pointer;
-    transition: 0.2s;
+    transition: filter 0.2s;
 }
 
 .btn-concluir:hover {
-    background-color: #2ea043;
+    filter: brightness(1.2);
+}
+
+/* Animação de entrada */
+@keyframes slideIn {
+    from { opacity: 0; transform: scale(0.9); }
+    to { opacity: 1; transform: scale(1); }
 }
