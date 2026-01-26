@@ -14,16 +14,14 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 
-// Função para apagar pedido concluído
 window.concluirPedido = function(id) {
-    if(confirm("Deseja marcar como entregue?")) {
+    if(confirm("Pedido entregue?")) {
         remove(ref(db, `pedidos/${id}`))
             .then(() => document.getElementById(id).remove())
-            .catch(err => console.error("Erro ao apagar:", err));
+            .catch(err => console.log(err));
     }
 }
 
-// Receber pedidos em tempo real
 onChildAdded(ref(db, 'pedidos'), (snapshot) => {
     const pedido = snapshot.val();
     const id = snapshot.key;
@@ -33,14 +31,15 @@ onChildAdded(ref(db, 'pedidos'), (snapshot) => {
     card.className = 'card-pedido';
     card.id = id;
     
+    // Agora o HTML segue a estrutura organizada do CSS
     card.innerHTML = `
-        <span class="cliente-nome">👤 CLIENTE: ${pedido.cliente}</span>
-        <div class="lista-itens">${pedido.itens}</div>
+        <span class="nome-cliente">👤 CLIENTE: ${pedido.cliente}</span>
+        <div class="itens-pedido">${pedido.itens}</div>
         <div class="rodape-card">
             <span class="total-txt">TOTAL: R$ ${pedido.total}</span>
-            <button class="btn-concluir" onclick="window.concluirPedido('${id}')">CONCLUÍDO</button>
+            <button class="btn-concluir" onclick="window.concluirPedido('${id}')">Concluir</button>
         </div>
     `;
     
-    lista.prepend(card); // Novos pedidos aparecem no topo
+    lista.prepend(card);
 });
