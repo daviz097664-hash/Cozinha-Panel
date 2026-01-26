@@ -1,97 +1,97 @@
-/* Importação de fonte moderna */
-@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap');
-
-* { box-sizing: border-box; margin: 0; padding: 0; }
+/* Estilo Black & Yellow - Cozinha */
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
 
 body {
-    font-family: 'Poppins', sans-serif;
-    background-color: #0f172a; /* Fundo azul marinho profundo */
-    color: #f8fafc;
+    background-color: #000000; /* Preto absoluto */
+    color: #ffffff;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     padding: 20px;
 }
 
-header {
+.header-cozinha {
     text-align: center;
-    margin-bottom: 40px;
-    padding: 20px;
-    background: #1e293b;
-    border-radius: 15px;
-    border-bottom: 4px solid #f59e0b;
+    margin-bottom: 30px;
 }
 
-h1 { color: #f59e0b; font-size: 1.8rem; }
+.header-cozinha h1 {
+    color: #ffc107; /* Amarelo igual ao Site A */
+    font-size: 1.6rem;
+    letter-spacing: 1px;
+}
 
-#status-conexao { color: #10b981; font-size: 0.8rem; margin-top: 5px; }
+.divider {
+    height: 3px;
+    background-color: #ffc107;
+    width: 60px;
+    margin: 10px auto;
+    border-radius: 2px;
+}
 
-/* Grid de Pedidos: Organiza os cards lado a lado automaticamente */
-.container-pedidos {
+.grid-container {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
     gap: 20px;
 }
 
-/* Estilo do Card do Pedido */
+/* Card do Pedido */
 .card-pedido {
-    background: #1e293b;
-    border-radius: 15px;
+    background-color: #1a1a1a; /* Cinza muito escuro para contraste */
+    border: 1px solid #333;
+    border-left: 6px solid #ffc107; /* Faixa amarela lateral */
+    border-radius: 12px;
     padding: 20px;
-    border: 1px solid #334155;
-    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
     display: flex;
     flex-direction: column;
-    justify-content: space-between;
-    transition: 0.3s;
-}
-
-.card-pedido:hover {
-    border-color: #f59e0b;
-    transform: translateY(-5px);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.5);
 }
 
 .cliente-nome {
-    font-size: 1.3rem;
-    font-weight: 700;
-    color: #f59e0b;
-    margin-bottom: 10px;
+    font-size: 1.2rem;
+    font-weight: bold;
+    color: #ffc107;
+    margin-bottom: 12px;
     display: block;
-    border-bottom: 1px solid #334155;
-    padding-bottom: 10px;
 }
 
-.itens-texto {
-    background: #0f172a;
+.lista-itens {
+    background: #262626;
     padding: 15px;
-    border-radius: 10px;
-    font-size: 1rem;
-    color: #cbd5e1;
+    border-radius: 8px;
     margin-bottom: 15px;
-    line-height: 1.6;
+    font-size: 1.1rem;
+    line-height: 1.5;
+    color: #e0e0e0;
 }
 
 .rodape-card {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-top: auto;
+    border-top: 1px solid #333;
+    padding-top: 15px;
 }
 
-.total-valor {
-    color: #10b981;
-    font-weight: 700;
-    font-size: 1.1rem;
+.total-txt {
+    font-weight: bold;
+    color: #4caf50; /* Verde para o preço igual ao Site A */
 }
 
 .btn-concluir {
-    background: #f59e0b;
-    color: #0f172a;
+    background-color: #ffc107;
+    color: #000000;
     border: none;
-    padding: 10px 15px;
+    padding: 10px 20px;
     border-radius: 8px;
-    font-weight: 700;
+    font-weight: 800;
     cursor: pointer;
     transition: 0.2s;
 }
 
 .btn-concluir:hover {
-    background: #d97706;
+    background-color: #e0a800;
+    transform: scale(1.03);
 }
