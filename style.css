@@ -1,0 +1,52 @@
+body {
+  font-family: Arial, sans-serif;
+  background-color: #1a1a1a; /* Escuro para não cansar a vista */
+  color: white;
+  margin: 0;
+  padding: 20px;
+}
+
+header {
+  text-align: center;
+  border-bottom: 2px solid #444;
+  margin-bottom: 20px;
+}
+
+#lista-pedidos {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.card-pedido {
+  background: #fff;
+  color: #333;
+  padding: 15px;
+  border-radius: 8px;
+  border-left: 10px solid #f1c40f; /* Faixa amarela de alerta */
+}
+
+.card-pedido h3 {
+  margin: 0 0 10px 0;
+  color: #d35400;
+}
+
+.btn-pronto {
+  background: #27ae60;
+  color: white;
+  border: none;
+  padding: 10px;
+  width: 100%;
+  border-radius: 5px;
+  cursor: pointer;
+  margin-top: 10px;
+  font-weight: bold;
+}
+
+.vazio {
+  text-align: center;
+  font-style: italic;
+  color: #888;
+}
