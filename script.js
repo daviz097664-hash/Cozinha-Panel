@@ -1,7 +1,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getDatabase, ref, onChildAdded, remove } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
-// A MESMA CONFIGURAÇÃO DO SITE A
+// Sua configuração idêntica ao Site A
 const firebaseConfig = {
     apiKey: "AIzaSyA0dHn3SXaO1Vc5cnovA7rddJN0WNrpi4k",
     authDomain: "cardapio-restaurante-df665.firebaseapp.com",
@@ -16,19 +16,19 @@ const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 const pedidosRef = ref(db, 'pedidos');
 
-// Função global para o botão "Concluir" funcionar no HTML
+// Função para remover o pedido (Botão Concluir)
 window.concluirPedido = function(id) {
-    if(confirm("Deseja marcar este pedido como entregue?")) {
+    if(confirm("Deseja finalizar este pedido?")) {
         remove(ref(db, `pedidos/${id}`))
             .then(() => {
-                const card = document.getElementById(id);
-                if (card) card.remove();
+                const elemento = document.getElementById(id);
+                if (elemento) elemento.remove();
             })
-            .catch(error => alert("Erro ao remover: " + error.message));
+            .catch(error => console.error("Erro ao remover:", error));
     }
 }
 
-// Escuta novos pedidos chegando
+// Escuta novos pedidos e cria o card bonito
 onChildAdded(pedidosRef, (snapshot) => {
     const pedido = snapshot.val();
     const id = snapshot.key;
@@ -39,17 +39,15 @@ onChildAdded(pedidosRef, (snapshot) => {
     card.id = id;
     
     card.innerHTML = `
-        <div class="header-pedido">
-            <strong>👤 Cliente: ${pedido.cliente}</strong>
+        <div class="corpo-card">
+            <span class="cliente-nome">👤 ${pedido.cliente}</span>
+            <div class="itens-texto">${pedido.itens}</div>
         </div>
-        <div class="itens-pedido">
-            <p>📝 ${pedido.itens}</p>
-        </div>
-        <div class="footer-pedido">
-            <span>💰 Total: R$ ${pedido.total}</span>
-            <button class="btn-concluir" onclick="window.concluirPedido('${id}')">CONCLUIR / ENTREGAR</button>
+        <div class="rodape-card">
+            <span class="total-valor">R$ ${pedido.total}</span>
+            <button class="btn-concluir" onclick="window.concluirPedido('${id}')">CONCLUIR</button>
         </div>
     `;
     
-    lista.prepend(card); // Adiciona o pedido mais recente no topo
+    lista.prepend(card); // Adiciona o mais recente no topo
 });
