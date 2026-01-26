@@ -3,78 +3,108 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Painel Cozinha - Organizado</title>
+    <title>Cozinha - Painel em Tempo Real</title>
     <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { background-color: #000000 !important; color: #ffffff; font-family: sans-serif; padding: 20px; }
-        header { text-align: center; margin-bottom: 30px; border-bottom: 2px solid #ffc107; padding-bottom: 10px; }
-        h1 { color: #ffc107; text-transform: uppercase; }
-        .container-pedidos { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 20px; }
-        .card-pedido { background-color: #121212; border: 1px solid #333; border-left: 6px solid #ffc107; border-radius: 10px; padding: 15px; }
-        .cliente-nome { color: #ffc107; font-weight: bold; font-size: 1.2rem; display: block; margin-bottom: 10px; }
+        body { background-color: #000; color: #fff; font-family: sans-serif; padding: 20px; }
+        header { text-align: center; border-bottom: 3px solid #ffc107; padding-bottom: 10px; margin-bottom: 30px; }
+        header h1 { color: #ffc107; text-transform: uppercase; letter-spacing: 2px; }
         
-        /* AQUI ESTÁ O SEGREDO DO PULO DE LINHA */
-        .itens-pedido { 
-            background: #1a1a1a; 
-            padding: 12px; 
-            border-radius: 5px; 
-            font-size: 1.1rem;
-            line-height: 1.6;
-            margin-bottom: 15px;
-            white-space: pre-line; /* IMPORTANTE: Faz o texto pular linha */
-            color: #efefef;
+        .container { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 20px; }
+
+        /* Estética idêntica à foto que você gostou */
+        .card-pedido { 
+            background: #121212; border-radius: 15px; padding: 20px; 
+            border-left: 6px solid #ffc107; box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+            transition: all 0.3s ease;
         }
 
-        .rodape { display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #222; padding-top: 10px; }
-        .total { color: #4caf50; font-weight: bold; font-size: 1.1rem; }
-        .btn-concluir { background: #ffc107; border: none; padding: 10px 15px; border-radius: 5px; font-weight: bold; cursor: pointer; }
+        .cliente-info { font-size: 1.4rem; font-weight: bold; color: #ffc107; margin-bottom: 15px; }
+        
+        .lista-itens { 
+            background: #1a1a1a; border-radius: 10px; padding: 15px; 
+            margin-bottom: 20px; font-size: 1.2rem; color: #fff;
+            white-space: pre-wrap; line-height: 1.4;
+        }
+
+        .rodape-card { display: flex; justify-content: space-between; align-items: center; }
+        .preco-total { color: #4caf50; font-size: 1.4rem; font-weight: bold; }
+        
+        .btn-concluir { 
+            background: #ffc107; color: #000; border: none; padding: 12px 20px; 
+            border-radius: 8px; font-weight: bold; cursor: pointer; text-transform: uppercase;
+        }
+
+        /* Efeito de brilho quando um pedido é ATUALIZADO */
+        .atualizado { animation: highlight 1.5s ease; }
+        @keyframes highlight {
+            0% { background: #121212; }
+            50% { background: #333; }
+            100% { background: #121212; }
+        }
     </style>
 </head>
 <body>
-    <header><h1>👨‍🍳 PEDIDOS PENDENTES</h1></header>
-    <main id="lista-pedidos" class="container-pedidos"></main>
-    <audio id="som-alerta" src="https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3" preload="auto"></audio>
 
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getDatabase, ref, onChildAdded, remove } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+<header><h1>👨‍🍳 PEDIDOS NA MESA</h1></header>
 
-        const firebaseConfig = {
-            apiKey: "AIzaSyA0dHn3SXaO1Vc5cnovA7rddJN0WNrpi4k",
-            authDomain: "cardapio-restaurante-df665.firebaseapp.com",
-            databaseURL: "https://cardapio-restaurante-df665-default-rtdb.firebaseio.com/",
-            projectId: "cardapio-restaurante-df665",
-            storageBucket: "cardapio-restaurante-df665.firebasestorage.app",
-            messagingSenderId: "205272470692",
-            appId: "1:205272470692:web:1cfc7c7d084887a3fe4231"
-        };
+<div class="container" id="painel-cozinha"></div>
 
-        const app = initializeApp(firebaseConfig);
-        const db = getDatabase(app);
-        const som = document.getElementById('som-alerta');
+<audio id="som-alerta" src="https://www.soundjay.com/buttons/sounds/button-3.mp3"></audio>
 
-        window.concluirPedido = function(id) {
-            if(confirm("Pedido entregue?")) {
-                remove(ref(db, `pedidos/${id}`)).then(() => document.getElementById(id).remove());
-            }
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { getDatabase, ref, onValue, remove } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyA0dHn3SXaO1Vc5cnovA7rddJN0WNrpi4k",
+        authDomain: "cardapio-restaurante-df665.firebaseapp.com",
+        databaseURL: "https://cardapio-restaurante-df665-default-rtdb.firebaseio.com/",
+        projectId: "cardapio-restaurante-df665",
+        storageBucket: "cardapio-restaurante-df665.firebasestorage.app",
+        messagingSenderId: "205272470692",
+        appId: "1:205272470692:web:1cfc7c7d084887a3fe4231"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+    let primeiroCarregamento = true;
+
+    // ESTA FUNÇÃO É O QUE FAZ ATUALIZAR SOZINHO SEM RECARREGAR
+    onValue(ref(db, 'pedidos'), (snapshot) => {
+        const pedidos = snapshot.val();
+        const container = document.getElementById('painel-cozinha');
+        
+        if (!primeiroCarregamento && pedidos) {
+            document.getElementById('som-alerta').play().catch(() => {});
+        }
+        primeiroCarregamento = false;
+
+        container.innerHTML = "";
+
+        if (!pedidos) {
+            container.innerHTML = "<p style='color:#666; text-align:center; width:100%;'>Nenhum pedido pendente.</p>";
+            return;
         }
 
-        let inicial = true;
-        setTimeout(() => inicial = false, 3000);
-
-        onChildAdded(ref(db, 'pedidos'), (snapshot) => {
-            const p = snapshot.val();
-            const id = snapshot.key;
+        for (let id in pedidos) {
+            const p = pedidos[id];
             const card = document.createElement('div');
-            card.className = 'card-pedido';
-            card.id = id;
-            card.innerHTML = `<span class="cliente-nome">👤 CLIENTE: ${p.cliente}</span>
-                              <div class="itens-pedido">${p.itens}</div>
-                              <div class="rodape"><span class="total">R$ ${p.total}</span>
-                              <button class="btn-concluir" onclick="window.concluirPedido('${id}')">CONCLUIR</button></div>`;
-            document.getElementById('lista-pedidos').prepend(card);
-            if (!inicial) som.play().catch(() => {});
-        });
-    </script>
+            card.className = "card-pedido atualizado"; // Classe atualizado faz o brilho
+            card.innerHTML = `
+                <div class="cliente-info">👤 ${p.cliente}</div>
+                <div class="lista-itens">${p.itens}</div>
+                <div class="rodape-card">
+                    <div class="preco-total">R$ ${p.total}</div>
+                    <button class="btn-concluir" onclick="concluir('${id}')">CONCLUIR</button>
+                </div>
+            `;
+            container.appendChild(card);
+        }
+    });
+
+    window.concluir = (id) => {
+        if(confirm("Pedido entregue?")) remove(ref(db, `pedidos/${id}`));
+    };
+</script>
 </body>
 </html>
