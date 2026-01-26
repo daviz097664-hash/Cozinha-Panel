@@ -12,26 +12,28 @@
         
         .grid-pedidos { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
         
-        .card-pedido { background: #1e1e1e; border: 2px solid #333; border-radius: 12px; padding: 15px; position: relative; transition: 0.3s; }
-        .card-pedido.pronto { border-color: #4caf50; opacity: 0.7; }
+        .card-pedido { background: #1e1e1e; border: 2px solid #333; border-radius: 12px; padding: 15px; position: relative; display: flex; flex-direction: column; }
+        .card-pedido.pronto { border-color: #4caf50; opacity: 0.6; }
         
-        .header-pedido { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; border-bottom: 1px solid #333; padding-bottom: 5px; }
-        .mesa { font-size: 1.3rem; font-weight: bold; color: #ffc107; }
+        .mesa { font-size: 1.3rem; font-weight: bold; color: #ffc107; margin-bottom: 10px; display: block; border-bottom: 1px solid #333; padding-bottom: 5px; }
         
-        .item-linha { font-size: 1.1rem; margin-bottom: 8px; display: flex; flex-direction: column; }
+        .item-linha { font-size: 1.1rem; margin-bottom: 10px; padding: 5px; border-radius: 5px; }
         .item-nome { font-weight: bold; color: #fff; }
-        .item-obs { font-size: 0.9rem; color: #ff5722; font-style: italic; margin-left: 10px; }
+        .item-obs { font-size: 0.95rem; color: #ff9800; font-style: italic; display: block; margin-top: 2px; }
         
-        /* Estilo para itens que já foram entregues (na edição) */
-        .item-entregue { text-decoration: line-through; color: #555 !important; font-size: 0.9rem; }
-        .item-entregue .item-nome, .item-entregue .item-obs { color: #555 !important; }
+        /* Estilo para o que já foi entregue antes da edição */
+        .item-entregue { text-decoration: line-through; color: #666 !important; opacity: 0.5; }
+        .item-entregue .item-nome, .item-entregue .item-obs { color: #666 !important; }
         
-        .badge-novo { background: #d32f2f; color: #fff; font-size: 0.7rem; padding: 2px 6px; border-radius: 4px; margin-left: 5px; vertical-align: middle; }
+        /* Destaque para o que o garçom acabou de adicionar */
+        .badge-novo { background: #d32f2f; color: #fff; font-size: 0.75rem; padding: 3px 7px; border-radius: 4px; font-weight: bold; margin-left: 8px; animation: pisca 1s infinite; }
 
-        .btn-pronto { width: 100%; padding: 12px; border: none; border-radius: 8px; background: #4caf50; color: white; font-weight: bold; font-size: 1rem; cursor: pointer; margin-top: 15px; }
+        @keyframes pisca { 0% {opacity: 1;} 50% {opacity: 0.5;} 100% {opacity: 1;} }
+
+        .btn-pronto { width: 100%; padding: 15px; border: none; border-radius: 8px; background: #4caf50; color: white; font-weight: bold; font-size: 1rem; cursor: pointer; margin-top: auto; }
         .btn-pronto:active { background: #388e3c; }
         
-        .vazio { text-align: center; color: #666; margin-top: 50px; font-size: 1.2rem; }
+        .vazio { text-align: center; color: #666; margin-top: 50px; font-size: 1.2rem; width: 100%; }
     </style>
 </head>
 <body>
@@ -41,7 +43,8 @@
 </header>
 
 <main id="container-pedidos" class="grid-pedidos">
-    </main>
+    <div class="vazio">Aguardando pedidos...</div>
+</main>
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
@@ -72,40 +75,39 @@
 
         Object.keys(pedidos).forEach(id => {
             const p = pedidos[id];
-            if (p.status === "finalizado") return;
-
+            
             const card = document.createElement('div');
             card.className = `card-pedido ${p.status === 'pronto' ? 'pronto' : ''}`;
             
             let itensHtml = "";
-            // Percorre os itens detalhados enviados pelo Site A
+            
             if (p.itensDeta) {
-                for (let key in p.itensDeta) {
+                // Organiza para mostrar os novos primeiro ou apenas destacar
+                Object.keys(p.itensDeta).forEach(key => {
                     const item = p.itensDeta[key];
-                    const estagioEntregue = item.status === "feito" ? "item-entregue" : "";
-                    const badgeNovo = item.status === "pendente" ? "<span class='badge-novo'>NOVO</span>" : "";
+                    const eNovo = item.status === "pendente";
+                    const classeEstilo = eNovo ? "" : "item-entregue";
                     
                     itensHtml += `
-                        <div class="item-linha ${estagioEntregue}">
-                            <span><span class="item-nome">${item.qtd}x ${item.nome}</span> ${badgeNovo}</span>
+                        <div class="item-linha ${classeEstilo}">
+                            <span class="item-nome">${item.qtd}x ${item.nome}</span>
+                            ${eNovo ? '<span class="badge-novo">NOVO</span>' : ''}
                             ${item.obs ? `<span class="item-obs">↳ ${item.obs}</span>` : ""}
                         </div>
                     `;
-                }
+                });
             } else {
-                // Backup caso o pedido venha no formato antigo
+                // Caso o pedido venha do formato antigo sem detalhes
                 itensHtml = `<div class="item-linha">${p.itens}</div>`;
             }
 
             card.innerHTML = `
-                <div class="header-pedido">
-                    <span class="mesa">📍 ${p.cliente}</span>
-                </div>
-                <div class="corpo-pedido">
+                <span class="mesa">📍 ${p.cliente}</span>
+                <div style="margin-bottom: 15px;">
                     ${itensHtml}
                 </div>
                 <button class="btn-pronto" onclick="marcarPronto('${id}')">
-                    ${p.status === 'pronto' ? 'PEDIDO JÁ PRONTO' : 'MARCAR COMO PRONTO'}
+                    ${p.status === 'pronto' ? 'PEDIDO ENTREGUE' : 'CONCLUIR PEDIDO'}
                 </button>
             `;
             container.appendChild(card);
