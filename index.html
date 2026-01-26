@@ -3,49 +3,87 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Painel Cozinha - Organizado</title>
+    <title>Painel Cozinha - Oficial</title>
+    
+    <link rel="icon" type="image/jpeg" href="IMG_4557.jpeg">
+    <link rel="apple-touch-icon" href="IMG_4557.jpeg">
+
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { 
             background-color: #000000 !important; 
             color: #ffffff; 
-            font-family: 'Segoe UI', sans-serif; 
+            font-family: 'Segoe UI', Roboto, sans-serif; 
             padding: 20px; 
         }
-        header { text-align: center; margin-bottom: 30px; border-bottom: 2px solid #ffc107; padding-bottom: 10px; }
-        h1 { color: #ffc107; }
-        .container-pedidos { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
+        header { 
+            text-align: center; 
+            margin-bottom: 30px; 
+            border-bottom: 2px solid #ffc107; 
+            padding-bottom: 15px; 
+        }
+        h1 { color: #ffc107; text-transform: uppercase; letter-spacing: 2px; }
+        
+        .container-pedidos { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); 
+            gap: 20px; 
+        }
         
         .card-pedido { 
             background-color: #121212; 
             border: 1px solid #333; 
-            border-left: 6px solid #ffc107; 
-            border-radius: 10px; 
-            padding: 15px; 
-        }
-        .cliente-nome { color: #ffc107; font-weight: bold; font-size: 1.2rem; display: block; margin-bottom: 10px; }
-        
-        /* AQUI ESTÁ O SEGREDO PARA FICAR UM ABAIXO DO OUTRO */
-        .itens-pedido { 
-            background: #1a1a1a; 
-            padding: 10px; 
-            border-radius: 5px; 
-            white-space: pre-wrap; /* Mantém as quebras de linha do Site A */
-            font-family: inherit; 
-            font-size: 1.1rem;
-            margin-bottom: 15px;
-            color: #ddd;
+            border-left: 8px solid #ffc107; 
+            border-radius: 12px; 
+            padding: 20px; 
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
         }
 
-        .rodape { display: flex; justify-content: space-between; align-items: center; }
-        .total { color: #4caf50; font-weight: bold; }
-        .btn-concluir { background: #ffc107; border: none; padding: 8px 15px; border-radius: 5px; font-weight: bold; cursor: pointer; }
+        .cliente-nome { 
+            color: #ffc107; 
+            font-weight: bold; 
+            font-size: 1.3rem; 
+            display: block; 
+            margin-bottom: 12px;
+            border-bottom: 1px solid #222;
+            padding-bottom: 5px;
+        }
+        
+        .itens-pedido { 
+            background: #1a1a1a; 
+            padding: 15px; 
+            border-radius: 8px; 
+            white-space: pre-line; 
+            font-size: 1.1rem;
+            line-height: 1.5;
+            margin-bottom: 20px;
+            color: #efefef;
+        }
+
+        .rodape { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+        }
+        .total { color: #4caf50; font-weight: bold; font-size: 1.2rem; }
+        
+        .btn-concluir { 
+            background: #ffc107; 
+            color: #000;
+            border: none; 
+            padding: 10px 20px; 
+            border-radius: 6px; 
+            font-weight: bold; 
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        .btn-concluir:hover { background: #e0a800; transform: scale(1.05); }
     </style>
 </head>
 <body>
 
     <header>
-        <h1>👨‍🍳 COZINHA - PEDIDOS</h1>
+        <h1>👨‍🍳 COZINHA - PEDIDOS LIVE</h1>
     </header>
 
     <main id="lista-pedidos" class="container-pedidos"></main>
@@ -71,11 +109,19 @@
         const som = document.getElementById('som-alerta');
 
         window.concluirPedido = function(id) {
-            remove(ref(db, `pedidos/${id}`)).then(() => document.getElementById(id).remove());
+            if(confirm("Deseja finalizar este pedido?")) {
+                remove(ref(db, `pedidos/${id}`)).then(() => {
+                    const el = document.getElementById(id);
+                    if(el) {
+                        el.style.opacity = '0';
+                        setTimeout(() => el.remove(), 300);
+                    }
+                });
+            }
         }
 
-        let inicial = true;
-        setTimeout(() => inicial = false, 2000);
+        let carregamentoInicial = true;
+        setTimeout(() => { carregamentoInicial = false; }, 3000);
 
         onChildAdded(ref(db, 'pedidos'), (snapshot) => {
             const p = snapshot.val();
@@ -93,8 +139,12 @@
                     <button class="btn-concluir" onclick="window.concluirPedido('${id}')">CONCLUIR</button>
                 </div>
             `;
+            
             lista.prepend(card);
-            if (!inicial) som.play();
+
+            if (!carregamentoInicial) {
+                som.play().catch(() => {});
+            }
         });
     </script>
 </body>
