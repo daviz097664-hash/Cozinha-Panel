@@ -3,55 +3,111 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cozinha</title>
+    <title>Sistema Restaurante - Tudo em Um</title>
+    
     <link rel="apple-touch-icon" href="img.ícone.jpeg.jpg">
+    <link rel="icon" type="image/jpeg" href="img.ícone.jpeg.jpg">
     <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+
     <style>
-        body { background: #000; color: #fff; font-family: sans-serif; padding: 20px; }
-        h1 { color: #ffc107; text-align: center; border-bottom: 2px solid #ffc107; }
-        #btn-ativar { background: #d32f2f; color: #fff; border: none; padding: 20px; border-radius: 10px; width: 100%; font-weight: bold; margin-bottom: 20px; }
-        .pedido-card { background: #111; border: 2px solid #ffc107; border-radius: 12px; padding: 15px; margin-bottom: 15px; }
-        .itens { font-size: 1.4rem; margin: 10px 0; background: #1a1a1a; padding: 10px; border-radius: 5px; }
-        .btn-ok { background: #4caf50; color: #fff; border: none; padding: 15px; width: 100%; border-radius: 8px; font-weight: bold; }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { background: #000; color: #fff; font-family: sans-serif; padding: 15px; }
+        
+        /* Seção de Lançamento */
+        .sessao-envio { background: #111; padding: 15px; border-radius: 10px; border: 1px solid #333; margin-bottom: 30px; }
+        input, textarea { width: 100%; padding: 12px; margin: 10px 0; border-radius: 5px; border: none; font-size: 1rem; }
+        .btn-enviar { background: #ffc107; color: #000; border: none; padding: 15px; width: 100%; border-radius: 8px; font-weight: bold; cursor: pointer; }
+
+        hr { border: 0; border-top: 2px dashed #ffc107; margin: 30px 0; }
+
+        /* Seção da Fila (Cozinha) */
+        h2 { color: #ffc107; text-align: center; margin-bottom: 15px; text-transform: uppercase; }
+        .pedido-card { background: #1a1a1a; border: 1px solid #444; border-radius: 12px; padding: 15px; margin-bottom: 15px; }
+        .cliente-nome { color: #ffc107; font-weight: bold; font-size: 1.2rem; }
+        .itens-lista { margin: 10px 0; font-size: 1.1rem; color: #ddd; white-space: pre-wrap; }
+        .btn-concluir { background: #4caf50; color: white; border: none; padding: 10px; width: 100%; border-radius: 5px; font-weight: bold; }
     </style>
 </head>
 <body>
-    <button id="btn-ativar" onclick="liberarSom()">🔴 ATIVAR SOM DO CHEF</button>
-    <h1>PEDIDOS</h1>
-    <div id="lista"></div>
-    <audio id="som"><source src="somdopedido.mp3.mp3" type="audio/mpeg"></audio>
+
+    <div class="sessao-envio">
+        <h2>📝 NOVO PEDIDO</h2>
+        <input type="text" id="cliente" placeholder="Nome do Cliente">
+        <textarea id="pedido" rows="4" placeholder="Ex: 1x X-Burger, 1x Coca-Cola"></textarea>
+        <button class="btn-enviar" onclick="enviarPedido()">ENVIAR PARA COZINHA</button>
+    </div>
+
+    <hr>
+
+    <h2>👨‍🍳 FILA DE PEDIDOS</h2>
+    <div id="lista-pedidos"></div>
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-    import { getDatabase, ref, onValue, remove } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+    import { getDatabase, ref, push, set, onValue, remove } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
-    const config = {
+    const firebaseConfig = {
+        apiKey: "AIzaSyA0dHn3SXaO1Vc5cnovA7rddJN0WNrpi4k",
+        authDomain: "cardapio-restaurante-df665.firebaseapp.com",
         databaseURL: "https://cardapio-restaurante-df665-default-rtdb.firebaseio.com/",
+        projectId: "cardapio-restaurante-df665",
+        storageBucket: "cardapio-restaurante-df665.firebasestorage.app",
+        messagingSenderId: "205272470692",
+        appId: "1:205272470692:web:1cfc7c7d084887a3fe4231"
     };
 
-    const app = initializeApp(config);
+    const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
-    const audio = document.getElementById('som');
-    let somOk = false;
-    let pronto = false;
 
-    window.liberarSom = () => {
-        audio.play().then(() => { audio.pause(); somOk = true; document.getElementById('btn-ativar').style.display='none'; });
+    // FUNÇÃO PARA ENVIAR
+    window.enviarPedido = function() {
+        const cliente = document.getElementById('cliente').value;
+        const itens = document.getElementById('pedido').value;
+
+        if (cliente && itens) {
+            const novoPedidoRef = push(ref(db, 'pedidos'));
+            set(novoPedidoRef, {
+                cliente: cliente,
+                itens: itens,
+                hora: new Date().toLocaleTimeString()
+            }).then(() => {
+                alert("Pedido Enviado!");
+                document.getElementById('cliente').value = "";
+                document.getElementById('pedido').value = "";
+            });
+        } else {
+            alert("Preencha o nome e o pedido!");
+        }
     };
 
-    onValue(ref(db, 'pedidos'), (snap) => {
-        const dados = snap.val();
-        if (dados && pronto && somOk) audio.play();
-        const lista = document.getElementById('lista');
-        lista.innerHTML = "";
-        for (let id in dados) {
-            const p = dados[id];
-            lista.innerHTML += `<div class="pedido-card"><h3>${p.cliente}</h3><div class="itens">${p.itens}</div><button class="btn-ok" onclick="concluir('${id}')">PRONTO ✅</button></div>`;
+    // FUNÇÃO PARA MOSTRAR NA TELA EM TEMPO REAL
+    onValue(ref(db, 'pedidos'), (snapshot) => {
+        const pedidos = snapshot.val();
+        const listaDiv = document.getElementById('lista-pedidos');
+        listaDiv.innerHTML = "";
+
+        if (pedidos) {
+            for (let id in pedidos) {
+                const p = pedidos[id];
+                const card = document.createElement('div');
+                card.className = 'pedido-card';
+                card.innerHTML = `
+                    <p class="cliente-nome">👤 ${p.cliente} <small>(${p.hora})</small></p>
+                    <div class="itens-lista">${p.itens}</div>
+                    <button class="btn-concluir" onclick="finalizarPedido('${id}')">CONCLUÍDO ✅</button>
+                `;
+                listaDiv.appendChild(card);
+            }
+        } else {
+            listaDiv.innerHTML = "<p style='text-align:center; color:#555;'>Nenhum pedido na fila.</p>";
         }
-        pronto = true;
     });
 
-    window.concluir = (id) => remove(ref(db, `pedidos/${id}`));
+    // FUNÇÃO PARA REMOVER
+    window.finalizarPedido = function(id) {
+        remove(ref(db, `pedidos/${id}`));
+    };
 </script>
 </body>
 </html>
