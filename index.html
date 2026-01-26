@@ -3,149 +3,55 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Painel Cozinha - Oficial</title>
-    
-    <link rel="icon" type="image/jpeg" href="IMG_4557.jpeg">
-    <link rel="apple-touch-icon" href="IMG_4557.jpeg">
-
+    <title>Cozinha</title>
+    <link rel="apple-touch-icon" href="img.ícone.jpeg.jpg">
+    <meta name="apple-mobile-web-app-capable" content="yes">
     <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { 
-            background-color: #000000 !important; 
-            color: #ffffff; 
-            font-family: 'Segoe UI', Roboto, sans-serif; 
-            padding: 20px; 
-        }
-        header { 
-            text-align: center; 
-            margin-bottom: 30px; 
-            border-bottom: 2px solid #ffc107; 
-            padding-bottom: 15px; 
-        }
-        h1 { color: #ffc107; text-transform: uppercase; letter-spacing: 2px; }
-        
-        .container-pedidos { 
-            display: grid; 
-            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); 
-            gap: 20px; 
-        }
-        
-        .card-pedido { 
-            background-color: #121212; 
-            border: 1px solid #333; 
-            border-left: 8px solid #ffc107; 
-            border-radius: 12px; 
-            padding: 20px; 
-            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
-        }
-
-        .cliente-nome { 
-            color: #ffc107; 
-            font-weight: bold; 
-            font-size: 1.3rem; 
-            display: block; 
-            margin-bottom: 12px;
-            border-bottom: 1px solid #222;
-            padding-bottom: 5px;
-        }
-        
-        .itens-pedido { 
-            background: #1a1a1a; 
-            padding: 15px; 
-            border-radius: 8px; 
-            white-space: pre-line; 
-            font-size: 1.1rem;
-            line-height: 1.5;
-            margin-bottom: 20px;
-            color: #efefef;
-        }
-
-        .rodape { 
-            display: flex; 
-            justify-content: space-between; 
-            align-items: center; 
-        }
-        .total { color: #4caf50; font-weight: bold; font-size: 1.2rem; }
-        
-        .btn-concluir { 
-            background: #ffc107; 
-            color: #000;
-            border: none; 
-            padding: 10px 20px; 
-            border-radius: 6px; 
-            font-weight: bold; 
-            cursor: pointer;
-            transition: 0.3s;
-        }
-        .btn-concluir:hover { background: #e0a800; transform: scale(1.05); }
+        body { background: #000; color: #fff; font-family: sans-serif; padding: 20px; }
+        h1 { color: #ffc107; text-align: center; border-bottom: 2px solid #ffc107; }
+        #btn-ativar { background: #d32f2f; color: #fff; border: none; padding: 20px; border-radius: 10px; width: 100%; font-weight: bold; margin-bottom: 20px; }
+        .pedido-card { background: #111; border: 2px solid #ffc107; border-radius: 12px; padding: 15px; margin-bottom: 15px; }
+        .itens { font-size: 1.4rem; margin: 10px 0; background: #1a1a1a; padding: 10px; border-radius: 5px; }
+        .btn-ok { background: #4caf50; color: #fff; border: none; padding: 15px; width: 100%; border-radius: 8px; font-weight: bold; }
     </style>
 </head>
 <body>
+    <button id="btn-ativar" onclick="liberarSom()">🔴 ATIVAR SOM DO CHEF</button>
+    <h1>PEDIDOS</h1>
+    <div id="lista"></div>
+    <audio id="som"><source src="somdopedido.mp3.mp3" type="audio/mpeg"></audio>
 
-    <header>
-        <h1>👨‍🍳 COZINHA - PEDIDOS PENDENTES</h1>
-    </header>
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { getDatabase, ref, onValue, remove } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
-    <main id="lista-pedidos" class="container-pedidos"></main>
+    const config = {
+        databaseURL: "https://cardapio-restaurante-df665-default-rtdb.firebaseio.com/",
+    };
 
-    <audio id="som-alerta" src="https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3" preload="auto"></audio>
+    const app = initializeApp(config);
+    const db = getDatabase(app);
+    const audio = document.getElementById('som');
+    let somOk = false;
+    let pronto = false;
 
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getDatabase, ref, onChildAdded, remove } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+    window.liberarSom = () => {
+        audio.play().then(() => { audio.pause(); somOk = true; document.getElementById('btn-ativar').style.display='none'; });
+    };
 
-        const firebaseConfig = {
-            apiKey: "AIzaSyA0dHn3SXaO1Vc5cnovA7rddJN0WNrpi4k",
-            authDomain: "cardapio-restaurante-df665.firebaseapp.com",
-            databaseURL: "https://cardapio-restaurante-df665-default-rtdb.firebaseio.com/",
-            projectId: "cardapio-restaurante-df665",
-            storageBucket: "cardapio-restaurante-df665.firebasestorage.app",
-            messagingSenderId: "205272470692",
-            appId: "1:205272470692:web:1cfc7c7d084887a3fe4231"
-        };
-
-        const app = initializeApp(firebaseConfig);
-        const db = getDatabase(app);
-        const som = document.getElementById('som-alerta');
-
-        window.concluirPedido = function(id) {
-            if(confirm("Deseja finalizar este pedido?")) {
-                remove(ref(db, `pedidos/${id}`)).then(() => {
-                    const el = document.getElementById(id);
-                    if(el) {
-                        el.style.opacity = '0';
-                        setTimeout(() => el.remove(), 300);
-                    }
-                });
-            }
+    onValue(ref(db, 'pedidos'), (snap) => {
+        const dados = snap.val();
+        if (dados && pronto && somOk) audio.play();
+        const lista = document.getElementById('lista');
+        lista.innerHTML = "";
+        for (let id in dados) {
+            const p = dados[id];
+            lista.innerHTML += `<div class="pedido-card"><h3>${p.cliente}</h3><div class="itens">${p.itens}</div><button class="btn-ok" onclick="concluir('${id}')">PRONTO ✅</button></div>`;
         }
+        pronto = true;
+    });
 
-        let carregamentoInicial = true;
-        setTimeout(() => { carregamentoInicial = false; }, 3000);
-
-        onChildAdded(ref(db, 'pedidos'), (snapshot) => {
-            const p = snapshot.val();
-            const id = snapshot.key;
-            const lista = document.getElementById('lista-pedidos');
-
-            const card = document.createElement('div');
-            card.className = 'card-pedido';
-            card.id = id;
-            card.innerHTML = `
-                <span class="cliente-nome">👤 ${p.cliente}</span>
-                <div class="itens-pedido">${p.itens}</div>
-                <div class="rodape">
-                    <span class="total">R$ ${p.total}</span>
-                    <button class="btn-concluir" onclick="window.concluirPedido('${id}')">CONCLUIR</button>
-                </div>
-            `;
-            
-            lista.prepend(card);
-
-            if (!carregamentoInicial) {
-                som.play().catch(() => {});
-            }
-        });
-    </script>
+    window.concluir = (id) => remove(ref(db, `pedidos/${id}`));
+</script>
 </body>
 </html>
