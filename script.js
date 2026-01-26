@@ -1,54 +1,55 @@
-// Relógio Digital
-setInterval(() => {
-    const agora = new Date();
-    document.getElementById('relogio').innerText = agora.toLocaleTimeString();
-}, 1000);
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getDatabase, ref, onChildAdded, remove } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
-// Função para renderizar o pedido na tela
-function adicionarPedidoNaTela(cliente, itensString, total) {
-    const container = document.getElementById('lista-pedidos');
-    
-    // Remove mensagem de "Aguardando pedidos"
-    const msg = document.querySelector('.mensagem-vazia');
-    if(msg) msg.remove();
+// A MESMA CONFIGURAÇÃO DO SITE A
+const firebaseConfig = {
+    apiKey: "AIzaSyA0dHn3SXaO1Vc5cnovA7rddJN0WNrpi4k",
+    authDomain: "cardapio-restaurante-df665.firebaseapp.com",
+    databaseURL: "https://cardapio-restaurante-df665-default-rtdb.firebaseio.com/",
+    projectId: "cardapio-restaurante-df665",
+    storageBucket: "cardapio-restaurante-df665.firebasestorage.app",
+    messagingSenderId: "205272470692",
+    appId: "1:205272470692:web:1cfc7c7d084887a3fe4231"
+};
 
-    // Toca som de novo pedido
-    const som = document.getElementById('som-alerta');
-    som.play().catch(e => console.log("Som aguardando interação"));
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+const pedidosRef = ref(db, 'pedidos');
+
+// Função global para o botão "Concluir" funcionar no HTML
+window.concluirPedido = function(id) {
+    if(confirm("Deseja marcar este pedido como entregue?")) {
+        remove(ref(db, `pedidos/${id}`))
+            .then(() => {
+                const card = document.getElementById(id);
+                if (card) card.remove();
+            })
+            .catch(error => alert("Erro ao remover: " + error.message));
+    }
+}
+
+// Escuta novos pedidos chegando
+onChildAdded(pedidosRef, (snapshot) => {
+    const pedido = snapshot.val();
+    const id = snapshot.key;
+    const lista = document.getElementById('lista-pedidos');
 
     const card = document.createElement('div');
     card.className = 'card-pedido';
-
-    // Organiza os itens (se vierem separados por vírgula)
-    const itensHTML = itensString.split(',').map(item => `<div class="item-linha">✔️ ${item.trim()}</div>`).join('');
-
-    card.innerHTML = `
-        <h2>👤 ${cliente} <span>#${Math.floor(Math.random() * 900) + 100}</span></h2>
-        <div class="lista-itens">
-            ${itensHTML}
-        </div>
-        <div class="total-pedido">Total: R$ ${total}</div>
-        <button class="btn-concluir" onclick="concluir(this)">PEDIDO PRONTO ✅</button>
-    `;
-
-    container.prepend(card);
-}
-
-// Remove o pedido com animação
-function concluir(botao) {
-    const card = botao.parentElement;
-    card.style.transition = "0.4s";
-    card.style.transform = "translateX(100px)";
-    card.style.opacity = "0";
+    card.id = id;
     
-    setTimeout(() => {
-        card.remove();
-        if (document.querySelectorAll('.card-pedido').length === 0) {
-            location.reload(); // Recarrega para mostrar a msg de vazio
-        }
-    }, 400);
-}
-
-// PARA TESTAR AGORA:
-// Copie a linha abaixo, cole no "Console" do seu navegador (F12) e dê Enter:
-// adicionarPedidoNaTela("Cliente Teste", "1x X-Tudo, 1x Coca Lata", "35,00");
+    card.innerHTML = `
+        <div class="header-pedido">
+            <strong>👤 Cliente: ${pedido.cliente}</strong>
+        </div>
+        <div class="itens-pedido">
+            <p>📝 ${pedido.itens}</p>
+        </div>
+        <div class="footer-pedido">
+            <span>💰 Total: R$ ${pedido.total}</span>
+            <button class="btn-concluir" onclick="window.concluirPedido('${id}')">CONCLUIR / ENTREGAR</button>
+        </div>
+    `;
+    
+    lista.prepend(card); // Adiciona o pedido mais recente no topo
+});
