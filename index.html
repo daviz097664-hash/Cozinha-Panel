@@ -3,43 +3,157 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Painel da Cozinha - Pedidos</title>
+    <title>KITCHEN MONITOR - Painel de Produção</title>
     <style>
+        :root {
+            --bg: #0a0a0a;
+            --card-bg: #161616;
+            --primary: #ffc107;
+            --success: #28a745;
+            --text: #ffffff;
+        }
+
         * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { background-color: #121212; color: #fff; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 20px; }
-        header { text-align: center; margin-bottom: 30px; border-bottom: 3px solid #ffc107; padding-bottom: 15px; }
-        header h1 { color: #ffc107; font-size: 2rem; text-transform: uppercase; letter-spacing: 2px; }
+        body { 
+            background-color: var(--bg); 
+            color: var(--text); 
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; 
+            padding: 20px;
+        }
 
-        #painel-cozinha { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 20px;
+            border-bottom: 2px solid var(--primary);
+            margin-bottom: 30px;
+        }
 
-        .card-pedido { background: #1e1e1e; border: 2px solid #333; border-radius: 12px; padding: 20px; display: flex; flex-direction: column; box-shadow: 0 4px 15px rgba(0,0,0,0.5); position: relative; overflow: hidden; }
-        
-        /* Faixa lateral indicando novo pedido */
-        .card-pedido::before { content: ""; position: absolute; left: 0; top: 0; height: 100%; width: 8px; background: #ffc107; }
+        header h1 { 
+            font-size: 1.8rem; 
+            color: var(--primary); 
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
 
-        .cliente-info { font-size: 1.3rem; font-weight: bold; color: #ffc107; margin-bottom: 15px; border-bottom: 1px solid #333; padding-bottom: 10px; text-transform: uppercase; }
-        
-        .lista-itens { font-size: 1.1rem; line-height: 1.6; color: #e0e0e0; white-space: pre-wrap; margin-bottom: 20px; flex-grow: 1; }
-        
-        .status-badge { font-weight: bold; font-size: 0.9rem; margin-bottom: 15px; color: #ffc107; }
+        #contador-pedidos {
+            background: var(--primary);
+            color: #000;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 1.2rem;
+        }
 
-        .btn-concluir { background: #4caf50; color: white; border: none; padding: 15px; border-radius: 8px; font-size: 1.1rem; font-weight: bold; cursor: pointer; transition: 0.3s; text-transform: uppercase; }
-        .btn-concluir:hover { background: #45a049; transform: scale(1.02); }
-        .btn-concluir:active { transform: scale(0.98); }
+        #painel-pedidos {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 25px;
+        }
 
-        @media (max-width: 600px) {
-            #painel-cozinha { grid-template-columns: 1fr; }
+        .card-pedido {
+            background: var(--card-bg);
+            border-radius: 15px;
+            border: 1px solid #333;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            animation: slideIn 0.3s ease-out;
+            position: relative;
+            overflow: hidden;
+        }
+
+        @keyframes slideIn {
+            from { transform: translateY(20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .card-header {
+            background: #222;
+            padding: 15px;
+            border-bottom: 1px solid #333;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .cliente-nome {
+            font-size: 1.2rem;
+            font-weight: 800;
+            color: var(--primary);
+            text-transform: uppercase;
+        }
+
+        .tempo-pedido {
+            font-size: 0.8rem;
+            color: #888;
+        }
+
+        .card-corpo {
+            padding: 20px;
+            flex-grow: 1;
+            font-size: 1.3rem;
+            line-height: 1.5;
+            color: #eee;
+            white-space: pre-wrap;
+            font-weight: 500;
+        }
+
+        .btn-pronto {
+            background: var(--success);
+            color: white;
+            border: none;
+            padding: 20px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            cursor: pointer;
+            text-transform: uppercase;
+            transition: 0.2s;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .btn-pronto:hover {
+            filter: brightness(1.2);
+        }
+
+        .btn-pronto:active {
+            transform: scale(0.98);
+        }
+
+        /* Badge de "URGENTE" se o pedido demorar (opcional) */
+        .badge-novo {
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--primary);
+            color: #000;
+            padding: 2px 10px;
+            font-size: 0.7rem;
+            font-weight: bold;
+            border-radius: 0 0 10px 10px;
+        }
+
+        @media (max-width: 480px) {
+            #painel-pedidos { grid-template-columns: 1fr; }
         }
     </style>
 </head>
 <body>
 
 <header>
-    <h1>Cozinha - Fila de Pedidos</h1>
+    <h1>Cozinha 👨‍🍳</h1>
+    <div id="contador-pedidos">0 Pedidos</div>
 </header>
 
-<div id="painel-cozinha">
+<div id="painel-pedidos">
     </div>
+
+<audio id="alerta-som" src="https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3"></audio>
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
@@ -58,45 +172,52 @@
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
     const pedidosRef = ref(db, 'pedidos');
+    let qtdAntiga = 0;
 
     onValue(pedidosRef, (snapshot) => {
         const pedidos = snapshot.val();
-        const container = document.getElementById('painel-cozinha');
+        const container = document.getElementById('painel-pedidos');
         container.innerHTML = "";
 
         if (!pedidos) {
-            container.innerHTML = "<p style='text-align:center; color:#666; font-size:1.2rem;'>Nenhum pedido em preparo no momento.</p>";
+            document.getElementById('contador-pedidos').innerText = "Fila Limpa";
+            container.innerHTML = "<div style='grid-column: 1/-1; text-align:center; padding: 50px; color: #444;'><h2>Aguardando novos pedidos...</h2></div>";
             return;
         }
 
-        // Transforma o objeto em array para ordenar pelos mais antigos primeiro
-        const listaPedidos = Object.entries(pedidos).map(([id, dados]) => ({ id, ...dados }));
+        const lista = Object.entries(pedidos)
+            .map(([id, dados]) => ({ id, ...dados }))
+            .filter(p => p.status !== "pronto"); // Apenas o que NÃO está pronto aparece aqui
 
-        listaPedidos.forEach((p) => {
-            // Se o status já for "pronto", não mostra mais para o cozinheiro
-            if (p.status === "pronto") return;
+        document.getElementById('contador-pedidos').innerText = `${lista.length} Pendentes`;
 
+        // Toca som se entrar pedido novo
+        if (lista.length > qtdAntiga) {
+            document.getElementById('alerta-som').play().catch(() => {});
+        }
+        qtdAntiga = lista.length;
+
+        lista.forEach(p => {
             const card = document.createElement('div');
             card.className = "card-pedido";
             card.innerHTML = `
-                <div class="cliente-info">👤 CLIENTE: ${p.cliente}</div>
-                <div class="status-badge">STATUS: EM PREPARO...</div>
-                <div class="lista-itens">${p.itens}</div>
-                <button class="btn-concluir" onclick="marcarComoPronto('${p.id}')">MARCAR COMO PRONTO ✅</button>
+                <div class="badge-novo">NOVO</div>
+                <div class="card-header">
+                    <span class="cliente-nome">${p.cliente}</span>
+                </div>
+                <div class="card-corpo">${p.itens}</div>
+                <button class="btn-pronto" onclick="marcarPronto('${p.id}')">
+                    CONCLUIR PEDIDO ✅
+                </button>
             `;
             container.appendChild(card);
         });
     });
 
-    // Função para alterar o status no banco de dados
-    window.marcarComoPronto = (id) => {
+    window.marcarPronto = (id) => {
         const pedidoRef = ref(db, `pedidos/${id}`);
         update(pedidoRef, {
             status: "pronto"
-        }).then(() => {
-            console.log("Pedido atualizado para pronto!");
-        }).catch((error) => {
-            alert("Erro ao atualizar: " + error);
         });
     };
 </script>
