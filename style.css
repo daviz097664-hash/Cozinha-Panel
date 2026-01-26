@@ -1,97 +1,71 @@
-:root {
-    --bg-dark: #121212;
-    --card-bg: #1e1e1e;
-    --accent: #f1c40f;
-    --success: #27ae60;
-    --text: #ffffff;
-}
+* { box-sizing: border-box; margin: 0; padding: 0; }
 
 body {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background-color: var(--bg-dark);
-    color: var(--text);
-    margin: 0;
+    font-family: Arial, sans-serif;
+    background-color: #0d1117;
+    color: white;
     padding: 20px;
 }
 
-.topo-painel {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    border-bottom: 2px solid #333;
-    padding-bottom: 20px;
+header {
+    text-align: center;
     margin-bottom: 30px;
 }
 
-.logo { display: flex; align-items: center; gap: 15px; }
-.logo h1 { margin: 0; font-size: 1.8rem; }
-#relogio { margin: 0; color: var(--accent); font-weight: bold; font-size: 1.2rem; }
+h1 { color: #ffc107; }
 
-.status { background: #333; padding: 8px 15px; border-radius: 20px; font-size: 0.8rem; }
-.bola-online { 
-    display: inline-block; width: 10px; height: 10px; 
-    background: var(--success); border-radius: 50%; margin-right: 5px; 
-}
-
-.grid-pedidos {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-    gap: 20px;
+.container {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    max-width: 600px;
+    margin: 0 auto;
 }
 
 .card-pedido {
-    background: var(--card-bg);
-    border-radius: 15px;
-    border-top: 5px solid var(--accent);
+    background: #161b22;
+    border: 2px solid #30363d;
+    border-radius: 12px;
     padding: 20px;
-    box-shadow: 0 10px 20px rgba(0,0,0,0.3);
-    animation: bounceIn 0.5s ease;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.3);
 }
 
-@keyframes bounceIn {
-    0% { transform: scale(0.9); opacity: 0; }
-    70% { transform: scale(1.05); }
-    100% { transform: scale(1); opacity: 1; }
-}
-
-.card-pedido h2 { 
-    font-size: 1.2rem; margin: 0 0 15px 0; color: var(--accent);
-    display: flex; justify-content: space-between; border-bottom: 1px solid #333;
+.header-pedido {
+    font-size: 1.2rem;
+    border-bottom: 1px solid #30363d;
     padding-bottom: 10px;
+    margin-bottom: 10px;
+    color: #58a6ff;
 }
 
-.lista-itens {
-    background: #2a2a2a;
-    padding: 10px;
-    border-radius: 8px;
+.itens-pedido p {
+    font-size: 1.1rem;
+    line-height: 1.4;
     margin-bottom: 15px;
 }
 
-.item-linha { 
-    padding: 8px 0; 
-    border-bottom: 1px solid #383838; 
-    font-size: 1.1rem;
-    color: #ddd;
+.footer-pedido {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
 }
 
-.item-linha:last-child { border-bottom: none; }
-
-.total-pedido { font-weight: bold; color: var(--success); font-size: 1.3rem; margin-top: 10px; }
+.footer-pedido span {
+    font-weight: bold;
+    color: #3fb950;
+}
 
 .btn-concluir {
-    width: 100%;
-    padding: 15px;
-    background: var(--success);
+    background-color: #238636;
     color: white;
     border: none;
-    border-radius: 10px;
+    padding: 10px 15px;
+    border-radius: 6px;
     font-weight: bold;
-    font-size: 1rem;
     cursor: pointer;
-    margin-top: 15px;
     transition: 0.2s;
 }
 
-.btn-concluir:hover { background: #2ecc71; transform: translateY(-2px); }
-
-.mensagem-vazia { text-align: center; grid-column: 1/-1; opacity: 0.5; margin-top: 100px; }
+.btn-concluir:hover {
+    background-color: #2ea043;
+}
