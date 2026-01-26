@@ -3,19 +3,165 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cozinha - Painel de Pedidos</title>
-    <link rel="stylesheet" href="style-b.css">
+    <title>Painel Cozinha - Black & Yellow</title>
+    
+    <style>
+        /* CSS EMBUTIDO PARA GARANTIR O FUNDO PRETO */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: #000000 !important; /* PRETO ABSOLUTO */
+            color: #ffffff;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #ffc107;
+            padding-bottom: 15px;
+        }
+
+        h1 {
+            color: #ffc107; /* AMARELO */
+            font-size: 1.8rem;
+            text-transform: uppercase;
+        }
+
+        .container-pedidos {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        /* CARD DO PEDIDO - ORGANIZADO */
+        .card-pedido {
+            background-color: #121212; /* Cinza quase preto */
+            border: 1px solid #333;
+            border-top: 5px solid #ffc107; /* Detalhe amarelo no topo do card */
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+            animation: fadeIn 0.4s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .cliente-header {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #ffc107;
+            margin-bottom: 15px;
+            display: block;
+        }
+
+        .lista-itens {
+            background: #1a1a1a;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            font-size: 1.1rem;
+            line-height: 1.5;
+            border: 1px solid #222;
+        }
+
+        .rodape-card {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-top: 10px;
+        }
+
+        .total-valor {
+            font-weight: bold;
+            color: #4caf50; /* Verde para o preço */
+            font-size: 1.1rem;
+        }
+
+        .btn-concluir {
+            background-color: #ffc107;
+            color: #000000;
+            border: none;
+            padding: 10px 18px;
+            border-radius: 6px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .btn-concluir:hover {
+            background-color: #e0a800;
+        }
+    </style>
 </head>
 <body>
 
     <header>
         <h1>👨‍🍳 PEDIDOS PENDENTES</h1>
-        <div class="linha-amarela"></div>
     </header>
 
     <main id="lista-pedidos" class="container-pedidos">
-    </main>
+        </main>
 
-    <script type="module" src="script.js"></script>
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getDatabase, ref, onChildAdded, remove } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyA0dHn3SXaO1Vc5cnovA7rddJN0WNrpi4k",
+            authDomain: "cardapio-restaurante-df665.firebaseapp.com",
+            databaseURL: "https://cardapio-restaurante-df665-default-rtdb.firebaseio.com/",
+            projectId: "cardapio-restaurante-df665",
+            storageBucket: "cardapio-restaurante-df665.firebasestorage.app",
+            messagingSenderId: "205272470692",
+            appId: "1:205272470692:web:1cfc7c7d084887a3fe4231"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+
+        // Função para concluir pedido
+        window.concluirPedido = function(id) {
+            if(confirm("Deseja marcar este pedido como entregue?")) {
+                remove(ref(db, `pedidos/${id}`))
+                    .then(() => {
+                        const card = document.getElementById(id);
+                        if (card) card.remove();
+                    })
+                    .catch(err => alert("Erro ao concluir: " + err.message));
+            }
+        }
+
+        // Escuta novos pedidos
+        onChildAdded(ref(db, 'pedidos'), (snapshot) => {
+            const pedido = snapshot.val();
+            const id = snapshot.key;
+            const lista = document.getElementById('lista-pedidos');
+
+            const card = document.createElement('div');
+            card.className = 'card-pedido';
+            card.id = id;
+            
+            card.innerHTML = `
+                <span class="cliente-header">👤 CLIENTE: ${pedido.cliente}</span>
+                <div class="lista-itens">${pedido.itens}</div>
+                <div class="rodape-card">
+                    <span class="total-valor">R$ ${pedido.total}</span>
+                    <button class="btn-concluir" onclick="window.concluirPedido('${id}')">✓ CONCLUIR</button>
+                </div>
+            `;
+            
+            lista.prepend(card); // Novo pedido sempre no topo
+        });
+    </script>
 </body>
 </html>
