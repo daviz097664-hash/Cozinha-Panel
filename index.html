@@ -3,57 +3,47 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cozinha - Painel em Tempo Real</title>
+    <title>Painel da Cozinha - Pedidos</title>
     <style>
-        body { background-color: #000; color: #fff; font-family: sans-serif; padding: 20px; }
-        header { text-align: center; border-bottom: 3px solid #ffc107; padding-bottom: 10px; margin-bottom: 30px; }
-        header h1 { color: #ffc107; text-transform: uppercase; letter-spacing: 2px; }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { background-color: #121212; color: #fff; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 20px; }
+        header { text-align: center; margin-bottom: 30px; border-bottom: 3px solid #ffc107; padding-bottom: 15px; }
+        header h1 { color: #ffc107; font-size: 2rem; text-transform: uppercase; letter-spacing: 2px; }
+
+        #painel-cozinha { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
+
+        .card-pedido { background: #1e1e1e; border: 2px solid #333; border-radius: 12px; padding: 20px; display: flex; flex-direction: column; box-shadow: 0 4px 15px rgba(0,0,0,0.5); position: relative; overflow: hidden; }
         
-        .container { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 20px; }
+        /* Faixa lateral indicando novo pedido */
+        .card-pedido::before { content: ""; position: absolute; left: 0; top: 0; height: 100%; width: 8px; background: #ffc107; }
 
-        /* Estética idêntica à foto que você gostou */
-        .card-pedido { 
-            background: #121212; border-radius: 15px; padding: 20px; 
-            border-left: 6px solid #ffc107; box-shadow: 0 4px 15px rgba(0,0,0,0.5);
-            transition: all 0.3s ease;
-        }
-
-        .cliente-info { font-size: 1.4rem; font-weight: bold; color: #ffc107; margin-bottom: 15px; }
+        .cliente-info { font-size: 1.3rem; font-weight: bold; color: #ffc107; margin-bottom: 15px; border-bottom: 1px solid #333; padding-bottom: 10px; text-transform: uppercase; }
         
-        .lista-itens { 
-            background: #1a1a1a; border-radius: 10px; padding: 15px; 
-            margin-bottom: 20px; font-size: 1.2rem; color: #fff;
-            white-space: pre-wrap; line-height: 1.4;
-        }
-
-        .rodape-card { display: flex; justify-content: space-between; align-items: center; }
-        .preco-total { color: #4caf50; font-size: 1.4rem; font-weight: bold; }
+        .lista-itens { font-size: 1.1rem; line-height: 1.6; color: #e0e0e0; white-space: pre-wrap; margin-bottom: 20px; flex-grow: 1; }
         
-        .btn-concluir { 
-            background: #ffc107; color: #000; border: none; padding: 12px 20px; 
-            border-radius: 8px; font-weight: bold; cursor: pointer; text-transform: uppercase;
-        }
+        .status-badge { font-weight: bold; font-size: 0.9rem; margin-bottom: 15px; color: #ffc107; }
 
-        /* Efeito de brilho quando um pedido é ATUALIZADO */
-        .atualizado { animation: highlight 1.5s ease; }
-        @keyframes highlight {
-            0% { background: #121212; }
-            50% { background: #333; }
-            100% { background: #121212; }
+        .btn-concluir { background: #4caf50; color: white; border: none; padding: 15px; border-radius: 8px; font-size: 1.1rem; font-weight: bold; cursor: pointer; transition: 0.3s; text-transform: uppercase; }
+        .btn-concluir:hover { background: #45a049; transform: scale(1.02); }
+        .btn-concluir:active { transform: scale(0.98); }
+
+        @media (max-width: 600px) {
+            #painel-cozinha { grid-template-columns: 1fr; }
         }
     </style>
 </head>
 <body>
 
-<header><h1>👨‍🍳 PEDIDOS NA MESA</h1></header>
+<header>
+    <h1>Cozinha - Fila de Pedidos</h1>
+</header>
 
-<div class="container" id="painel-cozinha"></div>
-
-<audio id="som-alerta" src="https://www.soundjay.com/buttons/sounds/button-3.mp3"></audio>
+<div id="painel-cozinha">
+    </div>
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-    import { getDatabase, ref, onValue, remove } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+    import { getDatabase, ref, onValue, update } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
     const firebaseConfig = {
         apiKey: "AIzaSyA0dHn3SXaO1Vc5cnovA7rddJN0WNrpi4k",
@@ -67,44 +57,49 @@
 
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
-    let primeiroCarregamento = true;
+    const pedidosRef = ref(db, 'pedidos');
 
-    // ESTA FUNÇÃO É O QUE FAZ ATUALIZAR SOZINHO SEM RECARREGAR
-    onValue(ref(db, 'pedidos'), (snapshot) => {
+    onValue(pedidosRef, (snapshot) => {
         const pedidos = snapshot.val();
         const container = document.getElementById('painel-cozinha');
-        
-        if (!primeiroCarregamento && pedidos) {
-            document.getElementById('som-alerta').play().catch(() => {});
-        }
-        primeiroCarregamento = false;
-
         container.innerHTML = "";
 
         if (!pedidos) {
-            container.innerHTML = "<p style='color:#666; text-align:center; width:100%;'>Nenhum pedido pendente.</p>";
+            container.innerHTML = "<p style='text-align:center; color:#666; font-size:1.2rem;'>Nenhum pedido em preparo no momento.</p>";
             return;
         }
 
-        for (let id in pedidos) {
-            const p = pedidos[id];
+        // Transforma o objeto em array para ordenar pelos mais antigos primeiro
+        const listaPedidos = Object.entries(pedidos).map(([id, dados]) => ({ id, ...dados }));
+
+        listaPedidos.forEach((p) => {
+            // Se o status já for "pronto", não mostra mais para o cozinheiro
+            if (p.status === "pronto") return;
+
             const card = document.createElement('div');
-            card.className = "card-pedido atualizado"; // Classe atualizado faz o brilho
+            card.className = "card-pedido";
             card.innerHTML = `
-                <div class="cliente-info">👤 ${p.cliente}</div>
+                <div class="cliente-info">👤 CLIENTE: ${p.cliente}</div>
+                <div class="status-badge">STATUS: EM PREPARO...</div>
                 <div class="lista-itens">${p.itens}</div>
-                <div class="rodape-card">
-                    <div class="preco-total">R$ ${p.total}</div>
-                    <button class="btn-concluir" onclick="concluir('${id}')">CONCLUIR</button>
-                </div>
+                <button class="btn-concluir" onclick="marcarComoPronto('${p.id}')">MARCAR COMO PRONTO ✅</button>
             `;
             container.appendChild(card);
-        }
+        });
     });
 
-    window.concluir = (id) => {
-        if(confirm("Pedido entregue?")) remove(ref(db, `pedidos/${id}`));
+    // Função para alterar o status no banco de dados
+    window.marcarComoPronto = (id) => {
+        const pedidoRef = ref(db, `pedidos/${id}`);
+        update(pedidoRef, {
+            status: "pronto"
+        }).then(() => {
+            console.log("Pedido atualizado para pronto!");
+        }).catch((error) => {
+            alert("Erro ao atualizar: " + error);
+        });
     };
 </script>
+
 </body>
 </html>
