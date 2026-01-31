@@ -6,68 +6,86 @@
     <title>Cozinha - Site B</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { background-color: #0b0b0b; color: #fff; font-family: sans-serif; padding: 20px; }
-        header { text-align: center; margin-bottom: 20px; border-bottom: 2px solid #28a745; padding-bottom: 10px; }
-        header h1 { color: #28a745; font-size: 1.8rem; text-transform: uppercase; }
-        
+        body { background-color: #050505; color: #fff; font-family: sans-serif; padding: 15px; }
+        header { text-align: center; margin-bottom: 20px; border-bottom: 3px solid #28a745; padding-bottom: 10px; }
+        header h1 { color: #28a745; font-size: 1.6rem; text-transform: uppercase; }
+
         .card-pedido { 
-            background: #1a1a1a; 
-            border: 1px solid #333; 
+            background: #111; 
+            border: 2px solid #333; 
             border-radius: 12px; 
-            padding: 20px; 
-            margin-bottom: 20px; 
-            position: relative;
-        }
-
-        /* Estilo para pedido NOVO ou EDITADO */
-        .status-novo { 
-            color: #ffc107; 
-            font-weight: bold; 
-            font-size: 0.9rem; 
-            display: block; 
-            margin-bottom: 5px; 
-        }
-
-        .cliente { color: #ffc107; font-size: 1.4rem; margin-bottom: 15px; display: block; }
-        
-        /* Onde a mágica acontece: se não estiver concluído, o texto fica normal */
-        .itens { 
-            color: #ccc; 
-            font-size: 1.2rem; 
-            white-space: pre-wrap; 
-            line-height: 1.5; 
-            margin-bottom: 20px; 
-        }
-
-        /* Classe que risca o pedido - só será aplicada se o status for 'concluido' */
-        .concluido { 
-            text-decoration: line-through; 
-            color: #444 !important; 
-            opacity: 0.6;
-        }
-
-        .btn-concluir { 
-            background: #28a745; 
-            color: white; 
-            border: none; 
             padding: 15px; 
+            margin-bottom: 20px; 
+        }
+
+        .cliente { color: #ffc107; font-size: 1.4rem; display: block; margin-bottom: 12px; text-transform: uppercase; border-bottom: 1px solid #222; padding-bottom: 5px; }
+        
+        /* Estilo para itens que já foram preparados anteriormente */
+        .item-antigo { 
+            text-decoration: line-through; 
+            color: #555; 
+            font-size: 1.1rem; 
+            margin-bottom: 5px;
+            padding-left: 10px;
+        }
+
+        /* Estilo para itens novos que chegaram agora */
+        .item-novo { 
+            color: #ffffff; 
+            font-size: 1.3rem; 
+            font-weight: bold;
+            margin-bottom: 8px;
+            padding: 5px 10px;
+            background: #1a1a1a;
+            border-left: 5px solid #ffc107;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .tag-novo { 
+            background: #ffc107; 
+            color: #000; 
+            font-size: 0.7rem; 
+            padding: 2px 6px; 
+            border-radius: 4px; 
+            text-transform: uppercase;
+        }
+
+        .lista-itens { margin-bottom: 20px; }
+
+        .btn-check { 
             width: 100%; 
+            padding: 18px; 
+            border: none; 
             border-radius: 8px; 
             font-weight: bold; 
             font-size: 1.1rem; 
             cursor: pointer; 
+            background: #28a745; 
+            color: #fff;
+            text-transform: uppercase;
+        }
+
+        /* Notificação visual no topo do card se houver algo novo */
+        .aviso-atualizacao {
+            color: #ffc107;
+            font-size: 0.8rem;
+            font-weight: bold;
+            margin-bottom: 10px;
+            text-align: center;
+            display: block;
         }
     </style>
 </head>
 <body>
 
-<header><h1>👨‍🍳 COZINHA & BAR</h1></header>
-
+<header><h1>👨‍🍳 PEDIDOS COZINHA</h1></header>
 <div id="lista-pedidos"></div>
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-    import { getDatabase, ref, onValue, update } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+    import { getDatabase, ref, onValue, update, get } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
     const firebaseConfig = {
         apiKey: "AIzaSyA0dHn3SXaO1Vc5cnovA7rddJN0WNrpi4k",
@@ -91,33 +109,62 @@
 
         Object.keys(pedidos).forEach(id => {
             const p = pedidos[id];
+            const div = document.createElement('div');
+            div.className = 'card-pedido';
             
-            // Lógica de visualização
-            const isConcluido = p.status === "concluido";
-            const isNovo = p.notificar === true;
+            let htmlItens = "";
+            let temItemNovo = false;
 
-            const card = document.createElement('div');
-            card.className = 'card-pedido';
+            // Organiza os itens: primeiro os novos, depois os antigos
+            const itensDeta = p.itensDeta || {};
             
-            card.innerHTML = `
-                ${isNovo ? '<span class="status-novo">(NOVO PEDIDO / ALTERADO)</span>' : ''}
+            Object.values(itensDeta).forEach(it => {
+                if (it.novo === true) {
+                    temItemNovo = true;
+                    htmlItens += `
+                        <div class="item-novo">
+                            <span>${it.qtd}x ${it.nome} ${it.obs ? '<br><small style="color:#aaa; font-size:0.9rem">Obs: '+it.obs+'</small>' : ''}</span>
+                            <span class="tag-novo">NOVO</span>
+                        </div>`;
+                } else {
+                    htmlItens += `
+                        <div class="item-antigo">
+                            ${it.qtd}x ${it.nome} ${it.obs ? '('+it.obs+')' : ''}
+                        </div>`;
+                }
+            });
+
+            div.innerHTML = `
+                ${temItemNovo ? '<span class="aviso-atualizacao">⚠️ PEDIDO ATUALIZADO</span>' : ''}
                 <strong class="cliente">📍 ${p.cliente}</strong>
-                <div class="itens ${isConcluido ? 'concluido' : ''}">${p.itens}</div>
-                <button class="btn-concluir" onclick="window.marcarPronto('${id}')">
-                    ${isConcluido ? 'PEDIDO PRONTO ✅' : 'CONCLUIR PEDIDO'}
+                <div class="lista-itens">${htmlItens}</div>
+                <button class="btn-check" onclick="window.marcarVisto('${id}')">
+                    CONCLUIR ITENS NOVOS
                 </button>
             `;
-            container.appendChild(card);
+            container.appendChild(div);
         });
     });
 
-    window.marcarPronto = (id) => {
-        // Ao clicar em concluir, removemos o aviso de 'novo' e mudamos o status
-        update(ref(db, `pedidos/${id}`), { 
-            status: "concluido",
-            notificar: false 
-        });
+    // Função para "limpar" o status de novo. Os itens continuam lá, mas ficam riscados.
+    window.marcarVisto = async (id) => {
+        const pedidoRef = ref(db, `pedidos/${id}/itensDeta`);
+        const snap = await get(pedidoRef);
+        const itens = snap.val();
+
+        if (itens) {
+            // Marca TODOS os itens atuais como antigos (novo = false)
+            for (let chave in itens) {
+                itens[chave].novo = false;
+            }
+            // Atualiza o banco e remove o alerta de notificação
+            update(ref(db, `pedidos/${id}`), { 
+                itensDeta: itens,
+                notificar: false 
+            });
+        }
     };
 </script>
 </body>
 </html>
+
