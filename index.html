@@ -3,48 +3,67 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cozinha - Painel de Pedidos</title>
+    <title>Cozinha - Site B</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { background-color: #121212; color: #fff; font-family: sans-serif; padding: 20px; }
-        header { text-align: center; margin-bottom: 20px; border-bottom: 3px solid #4caf50; padding-bottom: 10px; }
-        header h1 { color: #4caf50; text-transform: uppercase; font-size: 1.8rem; }
+        body { background-color: #0b0b0b; color: #fff; font-family: sans-serif; padding: 20px; }
+        header { text-align: center; margin-bottom: 20px; border-bottom: 2px solid #28a745; padding-bottom: 10px; }
+        header h1 { color: #28a745; font-size: 1.8rem; text-transform: uppercase; }
         
-        .grid-pedidos { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
-        
-        .card-pedido { background: #1e1e1e; border: 2px solid #333; border-radius: 12px; padding: 15px; position: relative; display: flex; flex-direction: column; }
-        .card-pedido.pronto { border-color: #4caf50; opacity: 0.6; }
-        
-        .mesa { font-size: 1.3rem; font-weight: bold; color: #ffc107; margin-bottom: 10px; display: block; border-bottom: 1px solid #333; padding-bottom: 5px; }
-        
-        .item-linha { font-size: 1.1rem; margin-bottom: 10px; padding: 5px; border-radius: 5px; }
-        .item-nome { font-weight: bold; color: #fff; }
-        .item-obs { font-size: 0.95rem; color: #ff9800; font-style: italic; display: block; margin-top: 2px; }
-        
-        /* Estilo para o que já foi entregue antes da edição */
-        .item-entregue { text-decoration: line-through; color: #666 !important; opacity: 0.5; }
-        .item-entregue .item-nome, .item-entregue .item-obs { color: #666 !important; }
-        
-        /* Destaque para o que o garçom acabou de adicionar */
-        .badge-novo { background: #d32f2f; color: #fff; font-size: 0.75rem; padding: 3px 7px; border-radius: 4px; font-weight: bold; margin-left: 8px; animation: pisca 1s infinite; }
+        .card-pedido { 
+            background: #1a1a1a; 
+            border: 1px solid #333; 
+            border-radius: 12px; 
+            padding: 20px; 
+            margin-bottom: 20px; 
+            position: relative;
+        }
 
-        @keyframes pisca { 0% {opacity: 1;} 50% {opacity: 0.5;} 100% {opacity: 1;} }
+        /* Estilo para pedido NOVO ou EDITADO */
+        .status-novo { 
+            color: #ffc107; 
+            font-weight: bold; 
+            font-size: 0.9rem; 
+            display: block; 
+            margin-bottom: 5px; 
+        }
 
-        .btn-pronto { width: 100%; padding: 15px; border: none; border-radius: 8px; background: #4caf50; color: white; font-weight: bold; font-size: 1rem; cursor: pointer; margin-top: auto; }
-        .btn-pronto:active { background: #388e3c; }
+        .cliente { color: #ffc107; font-size: 1.4rem; margin-bottom: 15px; display: block; }
         
-        .vazio { text-align: center; color: #666; margin-top: 50px; font-size: 1.2rem; width: 100%; }
+        /* Onde a mágica acontece: se não estiver concluído, o texto fica normal */
+        .itens { 
+            color: #ccc; 
+            font-size: 1.2rem; 
+            white-space: pre-wrap; 
+            line-height: 1.5; 
+            margin-bottom: 20px; 
+        }
+
+        /* Classe que risca o pedido - só será aplicada se o status for 'concluido' */
+        .concluido { 
+            text-decoration: line-through; 
+            color: #444 !important; 
+            opacity: 0.6;
+        }
+
+        .btn-concluir { 
+            background: #28a745; 
+            color: white; 
+            border: none; 
+            padding: 15px; 
+            width: 100%; 
+            border-radius: 8px; 
+            font-weight: bold; 
+            font-size: 1.1rem; 
+            cursor: pointer; 
+        }
     </style>
 </head>
 <body>
 
-<header>
-    <h1>👨‍🍳 Cozinha & Bar</h1>
-</header>
+<header><h1>👨‍🍳 COZINHA & BAR</h1></header>
 
-<main id="container-pedidos" class="grid-pedidos">
-    <div class="vazio">Aguardando pedidos...</div>
-</main>
+<div id="lista-pedidos"></div>
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
@@ -65,49 +84,27 @@
 
     onValue(ref(db, 'pedidos'), (snapshot) => {
         const pedidos = snapshot.val();
-        const container = document.getElementById('container-pedidos');
+        const container = document.getElementById('lista-pedidos');
         container.innerHTML = "";
 
-        if (!pedidos) {
-            container.innerHTML = "<div class='vazio'>Nenhum pedido pendente no momento.</div>";
-            return;
-        }
+        if (!pedidos) return;
 
         Object.keys(pedidos).forEach(id => {
             const p = pedidos[id];
             
-            const card = document.createElement('div');
-            card.className = `card-pedido ${p.status === 'pronto' ? 'pronto' : ''}`;
-            
-            let itensHtml = "";
-            
-            if (p.itensDeta) {
-                // Organiza para mostrar os novos primeiro ou apenas destacar
-                Object.keys(p.itensDeta).forEach(key => {
-                    const item = p.itensDeta[key];
-                    const eNovo = item.status === "pendente";
-                    const classeEstilo = eNovo ? "" : "item-entregue";
-                    
-                    itensHtml += `
-                        <div class="item-linha ${classeEstilo}">
-                            <span class="item-nome">${item.qtd}x ${item.nome}</span>
-                            ${eNovo ? '<span class="badge-novo">NOVO</span>' : ''}
-                            ${item.obs ? `<span class="item-obs">↳ ${item.obs}</span>` : ""}
-                        </div>
-                    `;
-                });
-            } else {
-                // Caso o pedido venha do formato antigo sem detalhes
-                itensHtml = `<div class="item-linha">${p.itens}</div>`;
-            }
+            // Lógica de visualização
+            const isConcluido = p.status === "concluido";
+            const isNovo = p.notificar === true;
 
+            const card = document.createElement('div');
+            card.className = 'card-pedido';
+            
             card.innerHTML = `
-                <span class="mesa">📍 ${p.cliente}</span>
-                <div style="margin-bottom: 15px;">
-                    ${itensHtml}
-                </div>
-                <button class="btn-pronto" onclick="marcarPronto('${id}')">
-                    ${p.status === 'pronto' ? 'PEDIDO ENTREGUE' : 'CONCLUIR PEDIDO'}
+                ${isNovo ? '<span class="status-novo">(NOVO PEDIDO / ALTERADO)</span>' : ''}
+                <strong class="cliente">📍 ${p.cliente}</strong>
+                <div class="itens ${isConcluido ? 'concluido' : ''}">${p.itens}</div>
+                <button class="btn-concluir" onclick="window.marcarPronto('${id}')">
+                    ${isConcluido ? 'PEDIDO PRONTO ✅' : 'CONCLUIR PEDIDO'}
                 </button>
             `;
             container.appendChild(card);
@@ -115,9 +112,12 @@
     });
 
     window.marcarPronto = (id) => {
-        update(ref(db, `pedidos/${id}`), { status: "pronto" });
+        // Ao clicar em concluir, removemos o aviso de 'novo' e mudamos o status
+        update(ref(db, `pedidos/${id}`), { 
+            status: "concluido",
+            notificar: false 
+        });
     };
 </script>
-
 </body>
 </html>
